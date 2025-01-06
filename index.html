@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Komentar Web</title>
+    <!-- Firebase SDK v11 -->
+    <script type="module">
+      // Import Firebase functions
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+      import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+      import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-analytics.js";
+
+      // Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyDZlFJL0duqqRZRbE7hTSAvs5lsC-ls9PU",
+        authDomain: "komentar-c989a.firebaseapp.com",
+        projectId: "komentar-c989a",
+        storageBucket: "komentar-c989a.firebasestorage.app",
+        messagingSenderId: "207813059785",
+        appId: "1:207813059785:web:44cc1572bb52bb0db4d918",
+        measurementId: "G-P9H0J76BXX"
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+      const analytics = getAnalytics(app);
+
+      // Menyimpan komentar ke Firestore
+      window.addEventListener('DOMContentLoaded', () => {
+        const commentForm = document.getElementById('commentForm');
+        commentForm.addEventListener('submit', async (event) => {
+          event.preventDefault();
+
+          let name = document.getElementById('name').value;
+          let comment = document.getElementById('comment').value;
+          let date = new Date().toLocaleString();
+
+          if (name && comment) {
+            // Menambahkan komentar ke Firestore
+            await addDoc(collection(db, "comments"), {
+              name: name,
+              comment: comment,
+              date: date
+            });
+
+            // Reset form setelah kirim
+            document.getElementById('name').value = '';
+            document.getElementById('comment').value = '';
+            loadComments();
+          }
+        });
+
+        // Menampilkan komentar dari Firestore
+        async function loadComments() {
+          let commentsSection = document.getElementById('commentsSection');
+          commentsSection.innerHTML = ''; // Bersihkan div komentar
+
+          const querySnapshot = await getDocs(collection(db, "comments"));
+          querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            let newComment = document.createElement('div');
+            newComment.innerHTML = `<strong>${data.name}</strong> (${data.date}): <p>${data.comment}</p><hr>`;
+            commentsSection.appendChild(newComment);
+          });
+        }
+
+        // Panggil loadComments saat pertama kali buka
+        loadComments();
+      });
+    </script>
+</head>
+<body>
+    <h2>Form Komentar</h2>
+    
+    <form id="commentForm">
+        <label for="name">Nama:</label>
+        <input type="text" id="name" name="name" required><br><br>
+
+        <label for="comment">Komentar:</label><br>
+        <textarea id="comment" name="comment" rows="4" cols="50" required></textarea><br><br>
+
+        <button type="submit">Kirim Komentar</button>
+    </form>
+
+    <h3>Komentar yang Dikirim:</h3>
+    <div id="commentsSection"></div>
+</body>
+</html>
